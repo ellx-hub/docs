@@ -453,7 +453,9 @@ Then navigate to the directory you'd like to access in ellx and run
 $ ellx -u your-username
 ```
 
-After that you can navigate to your local project via user menu on the top left of any page ("Ellx CLI connect") or by navigating straigt to [https://ellx.io/external/localhost~3002](https://ellx.io/external/localhost~3002).
+This will run local file server on port 3002 by default.
+
+After that you can navigate to your local project via user menu on the top left of any page ("Ellx CLI connect") or by navigating straight to [https://ellx.io/external/localhost~3002](https://ellx.io/external/localhost~3002).
 
 ## Publishing
 
