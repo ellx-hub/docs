@@ -436,13 +436,15 @@ nav: true|false # Toggles sidebar navigation in publishing
 ---
 ```
 
-## Local file server
+## Ellx CLI
 
-First you need to install `ellx` package globally
+At the moment Ellx CLI comes with only one but very big feature, that is local development.
+
+First you need to install `ellx` package globally:
 ```html
-$ npm i -g ellx
+$ npm i -g ellx-cli
 or
-$ yarn global add ellx
+$ yarn global add ellx-cli
 ```
 
 Then navigate to the directory you'd like to access in ellx and run
@@ -451,7 +453,9 @@ Then navigate to the directory you'd like to access in ellx and run
 $ ellx -u your-username
 ```
 
-After that your local project should be available at [http://localhost:7778/external/localhost~3002](http://localhost:7778/external/localhost~3002)
+This will run local file server on port 3002 by default.
+
+After that you can navigate to your local project via user menu on the top left of any page ("Ellx CLI connect") or by navigating straight to [https://ellx.io/external/localhost~3002](https://ellx.io/external/localhost~3002).
 
 ## Publishing
 
@@ -461,7 +465,28 @@ This document itself was generated with Ellx, you can fork and play with it [her
 
 ## Sync with Github
 
-...coming soon
+In order to get the most out of Ellx we provide integration with Github as a Pro tier feature. It enables syncing public or private Github repositories with Ellx projects using Github actions.
+
+All you have to do is create a workflow file at `.github/workflows/my-action.yml`
+
+```
+on:
+  push:
+    branches:
+      - master
+      - 'release/**'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: ellxoft/ellx-sync@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+Note that this action will trigger sync whenever there's a new commit to `master` or `release/**` branches. Refer to [official documentation](https://docs.github.com/en/actions) to learn about other kinds of triggers and other options.
 
 ## Deploy sheet
 
