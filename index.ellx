@@ -1,5 +1,11 @@
 version: 1.1
 nodes:
+  test2 = 44
 layout:
 [
+  [
+    {
+      "node": "test2"
+    }
+  ]
 ]
