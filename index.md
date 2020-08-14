@@ -442,9 +442,9 @@ At the moment Ellx CLI comes with only one but very big feature, that is local d
 
 First you need to install `ellx` package globally:
 ```html
-$ npm i -g ellx-cli
+$ npm i -g @ellx/cli
 or
-$ yarn global add ellx-cli
+$ yarn global add @ellx/cli
 ```
 
 Then navigate to the directory you'd like to access in ellx and run
