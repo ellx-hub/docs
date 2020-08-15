@@ -207,7 +207,7 @@ Besides `range` that you've seen before spreadsheet has a few other built-in fun
 
 #### Component API
 
-Ellx exposes 4 methods describing how user components should update and render inside a sheet. They are:
+Ellx exposes 5 methods describing how user components should update and render inside a sheet. They are:
 
 - update
 Update is called whenever any input props are changed. It recieves new props as its only argument.
@@ -236,6 +236,13 @@ Render method recieves DOM node of a spreadsheet cell it should render to. This 
 ```js
 render(cell) {
     cell.appendChild(this.myNode);
+}
+```
+
+- stale Stale is called when component's props become stale. If the `stale` handler is missing, in this situation the component is destroyed and re-created again when resolved props become available. If this behavior is not desired, implement the `stale` handler. It may be empty, or it may signal to the component to re-render in a stale state, or return something different in `output`.
+
+```js
+stale() {
 }
 ```
 
@@ -284,7 +291,13 @@ const ellxify = Component => class {
   }
 
   update(props) {
-      this.instance.$set(props);
+      this.instance.$set({ ...props, stale: false });
+  }
+  
+  stale() {
+    // this way component instance will be able to handle
+    // stale state
+    this.update({ stale: true });
   }
 
   dispose() {
