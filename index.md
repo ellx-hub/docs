@@ -239,12 +239,10 @@ render(cell) {
 }
 ```
 
-- stale
-Stale is called when node depends on some ongoing calculation up the tree. By default stale components return magic "io.ellx.STALE" value and display "...". Since this may be unwanted behaviour user can override this value with, for instance, previous computation value.
+- stale Stale is called when component's props become stale. If the `stale` handler is missing, in this situation the component is destroyed and re-created again when resolved props become available. If this behavior is not desired, implement the `stale` handler. It may be empty, or it may signal to the component to re-render in a stale state, or return something different in `output`.
 
 ```js
 stale() {
-    return this.lastComputedValue;
 }
 ```
 
