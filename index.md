@@ -146,16 +146,16 @@ Use Shift-Alt-Down Arrow to expand object down:
 Shift-Alt-Right Arrow will expand each value to it's own cell:
 
 ```js
-0 	0
-1 	1
-2 	4
-3 	9
-4 	16
-5 	25
-6 	36
-7 	49
-8 	64
-9 	81
+0   0
+1   1
+2   4
+3   9
+4   16
+5   25
+6   36
+7   49
+8   64
+9   81
 ```
 
 If original formula is updated expanded array will of course change reactively.
@@ -261,8 +261,8 @@ Note that all of these methods are optional. Definition of the component must be
 
 ```js
 export const make = component 
-	=> props
-	=> ({ ...props, __EllxMeta__: { component } });
+  => props
+  => ({ ...props, __EllxMeta__: { component } });
 ```
 
 Here's an example of ellxify which renders Svelte component to a cell and binds prop `value` to the node value:
@@ -425,14 +425,14 @@ Ellx uses prism.js for code highlighting. Wrap code snippet in three ticks (\`)
 
 <pre class="text-black px-4  bg-gray-100 dark:bg-gray-300">```[js|html|css]?
 function sum(a, b) {
-	return a + b;
+  return a + b;
 }
 ```</pre>
 
 will output
 ```js
 function sum(a, b) {
-	return a + b;
+  return a + b;
 }
 ```
 
