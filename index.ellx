@@ -1,11 +1,39 @@
 version: 1.1
 nodes:
-  test2 = 44
+  test2 = 'I am defined in the sheet'
+  r = range(4)
+  r2 = r.map(x => ({ x, 'x^2': x * x }))
+  $1 = myIp.split('.').map(x => String.fromCodePoint(+x + 0x1f300)).join('')
 layout:
 [
   [
     {
       "node": "test2"
+    }
+  ],,
+  [,
+    {
+      "node": "r",
+      "expansion": {
+        "vertical": true,
+        "height": 4,
+        "width": 1
+      }
+    },
+    {
+      "node": "r2",
+      "expansion": {
+        "vertical": true,
+        "secondary": true,
+        "labelsTop": true,
+        "height": 4,
+        "width": 2
+      }
+    }
+  ],,,,,,,
+  [,
+    {
+      "node": "$1"
     }
   ]
 ]

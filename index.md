@@ -6,12 +6,16 @@ title: Ellx documentation
   p a, #app ul a {
     text-decoration: underline;
   }
-  
+
   table {
     width: 100%;
-    margin-bottom: 4rem;
+    margin-bottom: 2rem;
   }
-  
+
+  blockquote {
+    font-family: monospace;
+  }
+
   p code {
     background: lavender;
     border-radius: 3px;
@@ -27,7 +31,7 @@ title: Ellx documentation
   .mode-dark p code {
     background: gray;
   }
-  
+
   table code {
     font-size: 12px;
   }
@@ -36,35 +40,100 @@ title: Ellx documentation
 # Introduction to Ellx
 
 ## Overview
-Ellx is an in-browser IDE with built in reactive engine which allows users to create complex programs, publish documentation and deploy production-ready code as serverless functions. Ellx features a reactive spreadsheet which allows to inspect JavaScript objects, maps and arrays in two dimensions and in real time which makes development experience easier than ever, as well as drawing insights from data. Many developers are used to tediously repeating the cycle of
+Ellx takes the pain out of using spreadsheets and notebooks at scale.
 
-- update code
-- open browser/console/terminal
-- inspect their data with debugger or else (which may involve a few extra clicks to get to the piece they actually need)
+It embraces the concept of [exploratory programming](https://en.wikipedia.org/wiki/Exploratory_programming), i.e. your code is evaluated as you write it, which is the defining paradigm of notebooks and spreadsheets.
 
-Ellx aims to simplify that process. It is also great for sketching, trying out new libraries or combining different pieces of code, be it external APIs, libraries, user code or even microservices written in a different language. 
+At the same time, all your code remains testable, source-controlled, with business logic separated from presentation.
 
-Ellx reactive expressions have all the expressive power of JavaScript with a few extensions like [operator overloading](#operator-overloading) and [mixing sync and async operations](#sync-async).
+Ellx harnesses the full exploratory power of a spreadsheet, where you can easily draw associative insights from your data presented in a tabular form, and design reactive data flows.
 
-In future Ellx spreadsheets will not only serve as an inspection tool but also as program entrypoints which will be deployed as serverless functions.
+It runs 100% locally in your browser, which means it is very responsive, and you won't have to install anything else.
+
+It is a perfect tool to explore new libraries and APIs, quickly bootstrap a prototype of your application, and ultimately deploy it in production as an independent website, or (soon) as a serverless microservice.
+
+Ellx is arming you with tools to set up a proper production release process for your projects, with dependencies management and CI/CD.
+
+No compromises are made as to what you can achieve with it. It is all up to your imagination!
 
 ## Project structure
 
-Ellx project is the file system-like abstraction which consists of files and folders which can be copied/renamed/removed as one could expect. There are two types of projects:
+Ellx project is a collection of files and folders you can see in the project explorer on the left. Click on `(…)` next to an item (or right-click the item) to see a list of available actions. Also <kbd>Ctrl+Shift+P</kbd> opens a *command palette*.
 
-- **Cloud.** Created at https://ellx.io
-- **Local.** Served with Ellx resource server locally. See local file server [section](#local-file-server) for details.
+Project files are backed by AWS S3. Ellx servers are only keeping the metadata.
 
-Cloud projects are created public by default but can be set to private on the user profile page (`https://ellx.io/*username*`). Beware that only subsequent writes to project files will be made as private since other users' projects could be referring to previously public project.
+You can also use your local file system as a backend. In this case, you need to run the [Ellx CLI](https://github.com/ellxoft/ellx-cli) to serve your project locally.
 
-Projects can be forked, deleted and published. Published project is available at `{username}-{project}.ellx.app`. `index.md` is the default entry point for a project which gets published and can be found as a preview at `https://ellx.io/{user}/{project}`.
+At the moment a project can be either public (read-write for the owner and read-only for everyone else) or private (only accessible by the owner). Private is the default.
 
-Note that folders are created with trailing slash `/`.
+You can make your project public by clicking on the red lock sign next to it on your profile page (`https://ellx.io/{username}`).
+
+[Explore](https://ellx.io/explore) other users' projects, and *fork* them to make changes.
+
+To create a folder inside your project terminate a new item's name with a slash (`/`). Alternatively, you can directly create a nested file by naming it, for example, `folder/nested.js`
 
 #### Namespaces
-Ellx namespace consists of three files located in the same folder with the same name ending with `.ellx` (sheet), `.js` (script) and `.md` (layout). 
+Projects can contain files of any type, however, the following filename extensions are treated specially:
 
-Any named export of a script is available in both sheet and layout within the same namespace. E.g.
+- `.js :` JavaScript module
+- `.ellx :` spreadsheet
+- `.md :` markdown layout
+
+Files with these extensions, sharing the same name and located in the same folder, constitute a single namespace:
+- Any named export of a script is available in both sheet and layout within the same namespace
+- Any node defined in the sheet is available in the layout and vice versa.
+
+In general, the name resolution works as follows:
+- check if *name* is a [built-in function](#built-in-functions)
+- look for a node in the same document (`.ellx` if referenced from a sheet or `.md` if referenced from a layout)
+- look for a node in the sibling document (`.md` if referenced from a sheet or `.ellx` if referenced from a layout)
+- look for the named export in the script within the same namespace
+- look for a globally defined symbol (in the `window` object)
+- throw a `{name} not defined` error
+
+Check out examples in the following sections.
+
+Use Alt-1/2/3 to switch between namespace `.js`, `.ellx`, and `.md` respectively.
+
+### Scripts
+Unlike classical notebooks, most of the code is gathered in plain javascript files, which are independently testable and easy to share between projects.
+
+`.js` files are standard ES6 modules, which means you can `import` and `export` stuff.
+
+To import a module from the same project, use relative or absolute paths (relative to the root of the project), e.g.
+```
+import foo from './folder/foo.js';
+import { default as bar } from '../anotherFolder/bar.js';
+import * as baz from '/fileAtProjectRoot.js';
+```
+To import a module from another project (including another user's project) add a tilde (`~`) in front of the file's full path, including user and project name, e.g.
+```
+import slider from '~ellx-hub/lib/components/Slider';
+import { plot } from '~ellx-hub/plot';
+```
+Note that, like in NodeJS, Ellx tries to automatically append `.js` and `/index.js` to resolve imports without extensions.
+
+Out of the box you can also import `.svelte` (Svelte components), `.jsx` (React components), `.vue` (Vue components: *coming soon*), `.css`, `.json`, and `.glsl` (WebGL shaders) files, like with most modern web bundlers.
+
+Keep an eye on [~ellx-hub](https://ellx.io/ellx-hub) user: it is Ellx official open-source collection of components and utilities.
+
+Please, contribute! Open an issue if you find one. Submit a pull request if you have a fix or an improvement!
+
+##### NPM modules
+You can directly import any NPM module published in UMD or ESM format, e.g.
+```
+import * as tf from '@tensorflow/tfjs@2.5';
+```
+Ellx is currently using [JSDelivr](https://www.jsdelivr.com) CDN to serve NPM modules.
+
+You can also `import` from arbitrary URLs, e.g.
+```
+import gauss_legendre from 'https://cdn.skypack.dev/gauss_legendre';
+```
+We actually encourage you to try using [Skypack](https://cdn.skypack.dev) for your NPM dependencies. It is currently less stable than JSDelivr but serves the modules directly in ESM format, which allows Ellx to collect dependencies statically.
+
+##### Exports
+All symbols you export from a `.js` file are (obviously) available to be imported by other modules (including from other projects), but can also be used within the same namespace in formulas on the spreadsheet or in the markdown layout interpolations delimited with curly braces, e.g.
 
 ```js
 // index.js
@@ -74,38 +143,29 @@ export const test = 42;
 Test is { test }
 ```
 
-Will render: "Test is { test }"
-
-Any node defined in a sheet is available in layout and will override export with the same name in the script.
-
-```js
-// index.js
-export const test2 = 43;
-
-// index.ellx
-test2 = 44
-
-// index.md
-Test2 is { test2 }
-```
-
-Will render: "Test2 is { test2 }"
-
-Use Alt-1/2/3 to switch between namespace `.md`, `.js` and `.ellx` respectively.
+will render
+>Test is { test }
 
 ### Spreadsheets
 
-Reactive spreadsheets are core to Ellx platform. They can be seen as a powerful debugger where one can see live output of user and library code. In nearest future spreadsheets will be exported as serverless functions so they will be used as API entrypoints.
+Spreadsheets are core to the Ellx platform. If the scripts are *"flesh and bones"* of your application, then the spreadsheets are its *"nervous system"*.
+
+Use them to
+- fetch and analyze your data
+- implement reactive logic to define, visualize, and debug the data processing flow
+- `require` dynamic dependencies
+
+A spreadsheet is also a sort of "back-of-the-napkin" calculation space - a piece of "checkered paper" where you can explore your data in a convenient tabular form.
 
 #### Addressing scheme
-Ellx semantic model is only slightly different from the classical Excel spreadsheet. In a lot of ways you will find it intuitive and familiar, so let's outline here the main differences.
+Ellx semantic model is slightly different from the classical Excel spreadsheet. However, you will find it intuitive and familiar in a lot of ways. Let's outline here the main differences.
 
-Ellx cells don't use the Excel addressing scheme i.e. A11, $D$4 etc. Instead, all calculation graph nodes - cells that are referenced in other formulas - should be given a name.
+Ellx cells don't use the Excel addressing scheme i.e. A11, $D$4, etc. Instead, all calculation graph nodes - cells that are referenced in other formulas - should be given a name.
 
 | Expression  | Value     |
 |:------------| ---------:|
-| `i = 3`     | { i = 3 } |
-| `j = 5`     | { j = 5 } |
+| `i = 33`     | { i = 33 } |
+| `j = 56`     | { j = 56 } |
 | `k = i + j` | { k = i + j } |
 
 Cells in the spreadsheet entered without an *=* sign (not named) are not part of the calculation graph and cannot be referenced in formulas.
@@ -117,75 +177,82 @@ If you start a formula with an *=* sign, but don't name it, a generated name wil
 | `= Math.sqrt(j * j + i * i)` | { $1 = Math.sqrt(j * j + i * i) } |
 | `$1`     | { $1 } |
 
-#### Working with arrays
+The right-hand side expression can be (almost) any valid [JS expression](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Expressions_and_Operators) which can include object and array literals, as well as arrow functions, but cannot include any block statements.
 
-A node of the calculation graph can be any JS object, including a function, a map or an array. Maps (JS objects) and arrays may be expanded in 2d using Shift-Alt-Down/Right shortcuts.
+Symbols referenced in formulas are resolved following the algorithm described in the [Namespaces](#namespaces) section, e.g.
+```js
+// index.js
+export const test2 = 'I am defined in the script';
 
-Use Shift-Alt-Z/X to toggle left/top labels.
+// index.ellx
+test2 = 'I am defined in the sheet'
+
+// index.md
+{ test2.toUpperCase() }
+```
+
+will render:
+>{ test2.toUpperCase() }
+
+#### Working with arrays and objects
+
+A node of the calculation graph can be any JS object, including functions, objects, or arrays. JS objects and arrays may be expanded in 2d using <kbd>Shift-Alt-Down/Right</kbd> shortcuts.
 
 | Expression  | Value     |
 |:------------| ---------:|
-| `r1 = range(10)` | { r1 = range(10) } |
-| `m1 = r1.map(r => [r, r*r])`     | { m1 = r1.map(r => [r, r*r]) } |
+| `r1 = range(4)` | { r1 = range(4) } |
+| `m1 = r1.map(x => ({ x, 'x^2': x * x }))` | { m1 = r1.map(x => ({ x, 'x^2': x * x })) } |
 
-Use Shift-Alt-Down Arrow to expand object down:
-
-```js
-[0, 0]
-[1, 1]
-[2, 4]
-[3, 9]
-[4, 16]
-[5, 25]
-[6, 36]
-[7, 49]
-[8, 64]
-[9, 81]
-```
-
-Shift-Alt-Right Arrow will expand each value to it's own cell:
+Use <kbd>Shift-Alt-Down</kbd> to expand the array vertically:
 
 ```js
-0 	0
-1 	1
-2 	4
-3 	9
-4 	16
-5 	25
-6 	36
-7 	49
-8 	64
-9 	81
+{x: 0, x^2: 0}
+{x: 1, x^2: 1}
+{x: 2, x^2: 4}
+{x: 3, x^2: 9}
 ```
 
-If original formula is updated expanded array will of course change reactively.
+<kbd>Shift-Alt-Right</kbd> will expand each value to it's own cell:
 
-#### Standard library
+```js
+x   x^2
+0   0
+1   1
+2   4
+3   9
+```
+Use <kbd>Shift-Alt-Z/X</kbd> to toggle left/top labels.
 
-Besides `range` that you've seen before spreadsheet has a few other built-in functions:
+#### Built-in functions
+
+Besides `range` that you've seen before spreadsheet has few other built-in functions:
 
 ##### require
-`require(url)` Import script.
+`require(dependency)` Import a dynamic dependency.
+
+`dependency` can be a URL or an NPM package name. You can also `require` other scripts from _the same_ project.
 
 | Expression  | Value     |
 |:------------| ---------:|
-| `leftpad = require('https://cdn.pika.dev/leftpad').default` | { leftpad = require('https://cdn.pika.dev/leftpad').default } |
+| `leftpad = require('leftpad')` | { leftpad = require('leftpad') } |
 | `= leftpad('111', 4)` | { leftpad('111', 4) } |
 
 ##### range
-`range(n)` Returns array containing sequence size *n*.
+`range(n)` Returns an array `[0..n-1]`
 
 | Expression  | Value     |
 |:------------| ---------:|
-| `r50 = range(50)` | { r50 = range(50) } |
+| `r20 = range(20)` | { r20 = range(20) } |
 
 ##### sum
 
-`sum(arr)` Return sum of all elements of array *arr*.
+`sum(iterable)` Return sum of all elements of an *iterable*.
+
+Supports [async transform](#async-transform) and [operator overloading](#operator-overloading) for the elements of the `iterable`.
 
 | Expression  | Value     |
 |:------------| ---------:|
-| `rsum = sum(r50)` | {rsum = sum(r50) } |
+| `rsum = sum(r20)` | {rsum = sum(r20) } |
 
 ##### race
 
@@ -196,217 +263,87 @@ Besides `range` that you've seen before spreadsheet has a few other built-in fun
 | `(x => x * x)(race([delay(10, () => -1)(), delay(1, () => 5)()]))` | { (x => x * x)(race([delay(10, () => -1)(), delay(1, () => 5)()])) } |
 
 ##### delay
-`delay(ms, val)` will return value *val* after *ms* milliseconds.
+`delay(ms, val)` will resolve to *val* after *ms* milliseconds.
 
 | Expression  | Value     |
 |:------------| ---------:|
-| `delVal = rangeInput()` | { delVal = rangeInput() } 
-| `delMs = rangeInput()` | { delMs = rangeInput() } 
-| `delA = delay(ms * 10, delVal)` | { delA = delay(delMs * 10, delVal) }
-| `= sum(range(delA))` | { sum(range(delA)) }
+| `value = rangeInput()` | { value = rangeInput() }
+| `delayedValue = delay(1000, value)` | { delayedValue = delay(1000, value) }
+| `= sum(range(delayedValue))` | { sum(range(delayedValue)) }
 
-#### Component API
+#### Async transform
 
-Ellx exposes 5 methods describing how user components should update and render inside a sheet. They are:
+Ellx is designed to simplify complex system integration tasks, which are often asynchronous by nature. If a result of any intermediate expression within a formula is a Promise (or an iterator) it will be automatically resolved (iterated to the end) in the most efficient fashion: calculations that can be run in parallel will still run in parallel.
 
-- update
-Update is called whenever any input props are changed. It recieves new props as its only argument.
+| Expression | Value |
+|:-----------| -----------:|
+| `strings = ['first', 'second', 'third']` | { strings = ['first', 'second', 'third'] } |
+| `dsec = rangeInput()` | { dsec = rangeInput() } |
+| `delayed = strings.map((s, i) => delay((i + 1) * dsec * 10, s))` | { delayed = strings.map((s, i) => delay((i + 1) * dsec * 10, s)) } |
+| `delayed.map(s => s.toUpperCase())` | { delayed.map(s => s.toUpperCase()) }
 
-```js
-update(props) {
-    this.myLogicUpdatingProps(props);
-}
-```
-
-- output
-Node value which can be used by other nodes. It must be an async generator returning a promise resolving to a new value.
-
-```js
-  async *output() {
-    while (true) {
-      yield this.value;
-      this.value = await new Promise(resolve => resolve(this.calcNewValue()));
-    }
-  }
-```
-
-- render
-Render method recieves DOM node of a spreadsheet cell it should render to. This method is useful whenever user component has to render not just the `output` value. E.g. range input you can find in this (document)[#delay].
-
-```js
-render(cell) {
-    cell.appendChild(this.myNode);
-}
-```
-
-- stale Stale is called when component's props become stale. If the `stale` handler is missing, in this situation the component is destroyed and re-created again when resolved props become available. If this behavior is not desired, implement the `stale` handler. It may be empty, or it may signal to the component to re-render in a stale state, or return something different in `output`.
-
-```js
-stale() {
-}
-```
-
-- dispose
-Dispose is called before the node is destroyed.
-
-```js
-dispose() {
-    this.cleanUp();
-}
-```
-
-Note that all of these methods are optional. Definition of the component must be added to the `__EllxMeta__.component` property of the object passed to the spreadsheet.
-
-"Ellxify" is a utility wrapper function which binds user component to the spreadsheet. The most basic example of `ellxify` is standard library's `make` method which does just this:
-
-```js
-export const make = component 
-	=> props
-	=> ({ ...props, __EllxMeta__: { component } });
-```
-
-Here's an example of ellxify which renders Svelte component to a cell and binds prop `value` to the node value:
-
-```js
-import {
-  bind,
-  binding_callbacks,
-}
-from 'svelte/internal';
-
-const ellxify = Component => class {
-  constructor(props, { initState }) {
-    this.value = initState;
-    this.target = document.createElement("div");
-    this.emit = null;
-
-    this.instance = new Component({
-        target: this.target,
-        props: {
-            value: this.value,
-            ...props
-        }
-    });
-    binding_callbacks.push(() => bind(this.instance, "value", value => this.emit && this.emit(value)));
-  }
-
-  update(props) {
-      this.instance.$set({ ...props, stale: false });
-  }
-  
-  stale() {
-    // this way component instance will be able to handle
-    // stale state
-    this.update({ stale: true });
-  }
-
-  dispose() {
-      this.instance.$destroy();
-  }
-
-  async *output() {
-    while (true) {
-      yield this.value;
-      this.value = await new Promise(resolve => this.emit = resolve);
-    }
-  }
-
-  render(node) {
-      node.appendChild(this.target);
-  }
-};
-
-
-export default (component, props) => ({ ...props, __EllxMeta__: { component: ellxify(component) }});
-```
-
-#### Mixing sync/async
-
-Ellx is designed to simplify complex system integration tasks, which are often asynchronous by nature. If a result of any intermediate expression is a Promise it will be automatically waited for in the most efficient fashion: parallel calculations will still run in parallel.
-
-| Expression             | Value                 |
-|:-----------------------------------------------| ----------------------:|
-| `x = rangeInput()`                             | { x = rangeInput() } |
-| `ms = 1000 * (1 + range(3))`                   | { ms = 1000 * (1 + range(3)) } |
-| `expr = ms.map(ms => delay(ms,  ms + x)` | { expr = ms.map(ms => delay(ms, ms + x)) } |
-| `expr*expr`                                   | { expr*expr }
+Ellx implements a *just-in-time* transpilation mechanism when evaluating formulas, so if the intermediate expressions are actually synchronous, there will be no performance penalty.
 
 #### Operator overloading
 
-Ellx formulas actually support an extension of JavaScript grammar, implementing operator overloading technique known as "transpilation at first evaluation". By looking at the type and constructor of operators' arguments at first evaluation Ellx is able to transiple the original formula on the fly to implement special treatment.
+The same *"transpilation at first evaluation"* mechanism is what allows Ellx to enrich the Javascript grammar with the long-missing operator overloading support on the fly.
 
-You can add operator overloading support to any existing class by adding `__EllxMeta__` property to it's prototype.
-
-Here we load the patch for Math.js's Complex and Matrix classes (defined in [/matyunya/docs/index.js](/matyunya/docs/index.js)).
-
-| Expression              | Value                  |
-|:----------------------- | ----------------------:|
-| `meta = {operator: { binary: { '+': (l, r) => l + r }}}` | { meta = {operator: { binary: { '+': (l, r) => l + r }}} }
-| `m = require('https://cdn.pika.dev/mathjs/v6')`| { m = require('https://cdn.pika.dev/mathjs/v6') }
-| `math = patchMathJS(m)` | { math = patchMathJS(m) }
-| `a = rangeInput()`      | { a = rangeInput() }
-| `{ r = range(a) }`      | { r = range(a) }          
-| `rnorm = math.matrix(r) * r` | { rnorm = math.matrix(r) * r } 
-| `c = math.complex('1+2i')`   | { c = math.complex('1+2i') }
-
-
-### Scripts
-
-Scripts are regular javascript files with `.js` extension. All of script's exports are available in the same namespace's layout and spreadsheet but can also be imported from other files and projects.
-
-#### Imports
-You can load any 3rd party external module published in ES2015 module format using a built-in require function, using dynamic import under the hood. You can use direct URL imports from any npm registry (like [pika.dev](https://www.pika.dev/cdn) or [unpkg.com](https://unpkg.com)).
-
-##### Import npm packages
-To import an npm package use import statement as usual:
-
+Arithmetic and logical operators are applied element-wise to JS built-in objects and arrays, e.g.
 ```js
-import * as d3 from "d3";
+(x => x * x)(range(5))
 ```
+returns
+>{ (x => x * x)(range(5)) }.
 
-##### Local imports
-To import a file from the same project
-
+You can add operator overloading support to any existing class by adding `__EllxMeta__` property to its prototype, e.g.
 ```js
-import test from '/same-project-some-dir/script.js';
-```
+import * as tf from '@tensorflow/tfjs';
 
-##### Import ellx project
-To import a file from any ellx project append it with `~`
-
-```js
-import docs from '~matyunya/docs/index.js';
+tf.Tensor.prototype.__EllxMeta__ =   {
+  operator: {
+    binary: {
+      '+': (lhs, rhs) => tf.add(lhs, rhs),
+      '-': (lhs, rhs) => tf.sub(lhs, rhs),
+      '*': (lhs, rhs) => tf.mul(lhs, rhs),
+      '/': (lhs, rhs) => tf.div(lhs, rhs),
+      '<': (lhs, rhs) => tf.less(lhs, rhs),
+      '<=': (lhs, rhs) => tf.lessEqual(lhs, rhs),
+      '>': (lhs, rhs) => tf.greater(lhs, rhs),
+      '>=': (lhs, rhs) => tf.greaterEqual(lhs, rhs),
+    },
+    unary: {
+      '!': rhs => tf.logicalNot(rhs),
+      '-': rhs => tf.neg(rhs),
+      '+': rhs => rhs,
+    }
+  }
+};
 ```
 
 ### Layouts
 
-Layouts are markdown files with `.md` extension. Their main purpose is to serve as project's live documentation akin to storybook or any other web notebook. Ellx uses [remark](https://github.com/remarkjs/remark) to render markdown. 
+Layouts are the *"skin"* of your application. Build an interactive storybook, documentation, or a dashboard for your project, using simple classical markdown syntax.
+
+Ellx uses [remark](https://github.com/remarkjs/remark) to render markdown.
 
 #### Reactive expressions
 
-Ellx layouts handles anything put between curly braces `{}` as a reactive expression.
+Ellx layouts parse expressions between curly braces `{ [node =] expr }` as reactive formulas, in exactly the same way as formulas on the spreadsheet, e.g.
 
-```html
-{ myNode = 5 }<br>
-{ user = { login: "login", password: "password" } }
-{ val = rangeInput() }
-{val}<br>
-{ range(10) }
+```
+My IP address is { myIp = fetch('https://ipinfo.io/ip').text().trim() }
+{ myIp.split('.').map(x => String.fromCodePoint(+x + 0x1f400)).join('') }
 ```
 
 will output
 
-{ myNode = 5 }<br>
-{ user = { login: "login", password: "password" } }
-{ val = rangeInput() }
-{val}<br>
-{ range(10) }
-
+> My IP address is { myIp = fetch('https://ipinfo.io/ip').text().trim() }
+{ myIp.split('.').map(x => String.fromCodePoint(+x + 0x1f400)).join('') }
 
 #### Math formulas
 [KaTeX](https://github.com/KaTeX/KaTeX) syntax is supported:
 
-Lift($L$) can be determined by Lift Coefficient ($C_L$) like the following equation.
+Lift ($L$) can be determined by Lift Coefficient ($C_L$) like the following equation.
 
 ```js
 $$
@@ -421,64 +358,179 @@ $$
 
 
 #### Code highlighting
-Ellx uses prism.js for code highlighting. Wrap code snippet in three ticks (\`)
+Ellx uses [prism.js](https://prismjs.com) for code highlighting. Wrap a code snippet in three ticks (\`)
 
 <pre class="text-black px-4  bg-gray-100 dark:bg-gray-300">```[js|html|css]?
 function sum(a, b) {
-	return a + b;
+  return a + b;
 }
 ```</pre>
 
 will output
 ```js
 function sum(a, b) {
-	return a + b;
+  return a + b;
 }
 ```
 
-or single tick for inline code block (`like this`).
+or single tick for inline code block `like this`.
 
 #### YAML configuration
-[Frontmatter-style](https://jekyllrb.com/docs/front-matter/) configuration is already supported although it has a single setting at the moment. 
+[Frontmatter-style](https://jekyllrb.com/docs/front-matter/) configuration is already supported although with only a few options at the moment.
 
 ```html
 ---
-template: path-to-md-template # Not supported yet
-title: project-title # Override project title displayed in published version
+title: project-title # Override project title displayed in the published version
 nav: true|false # Toggles sidebar navigation in publishing
 ---
 ```
+You can also embed any HTML markup directly into your layout, for example, styles.
+
+
+### Component API
+
+You might have noticed how certain nodes are rendered as plain text while others as graphic components.
+
+Components are special Ellx nodes that can maintain an internal state. This is the most powerful feature of Ellx, elevating it from a fancy spreadsheet to basically a fully functional application framework.
+
+When building reactive systems, it is crucial to enforce the referential transparency of all node expressions, i.e., given the same inputs, formulas should always output the same results. Otherwise, you are doomed to debug nasty surprised.
+
+However, in complex open systems, the inputs may come from outside, e.g. user input, and caching logic may need to be customized as well.
+
+This is where components come into play. A component is simply defined by its *props* and its constructor. If a formula returns an object with `__EllxMeta__: { component: [Function] }` property, then it is an Ellx component, and the following logic is applied:
+
+- If the node does **not** already hold a component, a new component is created as `new component(props)`, where `props` is the result of the formula itself.
+- If the node already holds a component that has been previously created by the **same** constructor `component`, then its `update(props)` method is called.
+- If the node already holds a component that has been previously created by a different constructor (in a strict `===` sense), then the previous component is destroyed and a new one is created as in the first case.
+
+For example,
+```js
+// index.js
+class Hello {
+  constructor(props) {
+    this.count = 0;
+    this.update(props);
+  }
+  update(props) {
+    this.count++;
+    this.name = props.name;
+  }
+  output() {
+    return `Hello ${this.name}! (updated ${this.count} times)`;
+  }
+}
+
+export const hello = name => ({
+  name,
+  __EllxMeta__: { component: Hello }
+});
+
+export { default as input } from "~ellx-hub/lib/components/Input";
+
+// index.md
+{ name = input({ value: 'Ellx' }) }
+{ hello(name) }
+```
+
+{ name = input({ value: 'Ellx' }) }
+
+>{ hello(name) }
+
+Ellx component API consists of only 5 lifecycle hooks that a component may implement, and all of them are optional!
+
+##### update(props)
+
+While the constructor is called only when the component is first created, its `update` method is called every time the node is recalculated to produce the new `props`, and its result is passed to `update` as its only argument.
+
+This is precisely what allows components to maintain an internal state through node recalculations.
+
+##### output()
+
+The calculation node adopts the result of the `output()` hook (when it's implemented) as its new value (instead of the `props` themselves), and propagates it to the node's dependents.
+
+Note, that `output()` may return a Promise or an iterator like any other Ellx node. What is special to components though is the case when `output()` returns an async iterator, e.g.
+```js
+async *output() {
+  while (true) {
+    yield await this.produceNextValuePromise();
+  }
+}
+```
+In such a situation the calculation node will adopt the values yielded by the iterator one by one:
+```js
+for await (let value of output()) adopt(value);
+```
+thus effectively implementing an *observable* paradigm, akin to MobX or RxJs observables.
+
+This is very useful for implementing components collecting user input, such as most of the UI components in [Ellx standard library](https://ellx.io/ellx-hub/lib).
+
+##### stale()
+If a component does not implement the `stale` hook, it will be destroyed if its props become *stale*, e.g. as a result of an async calculation which has not yet resolved, and re-created again when resolved props become available.
+
+Implementing the `stale` hook allows the component to treat these situations gracefully, for instance, by rendering a *spinner* and/or choosing to output a previously calculated value to node dependents.
+
+##### render(target)
+This argument to the `render` hook is the DOM node, where the component is supposed to render itself in the context of a spreadsheet or a layout.
+
+However, components have full access to the DOM of the project's sandboxed iframe and may append themselves directly to the `document` or `head` if they choose so, without even necessarily implementing the `render` hook.
+
+##### dispose()
+`dispose` is called before the component is destroyed:
+- when the node is removed
+- when an error is thrown upstream
+- when the props become stale and the `stale` handler is not implemented
+- when the node formula returns a different component constructor or no constructor in `__EllxMeta__`
+
+## Ellx standard library
+The [standard library project](https://ellx.io/ellx-hub/lib) is the official open-source collection of Ellx components and utilities.
+
+Among other things it provides tools to wrap any existing [React](https://ellx.io/ellx-hub/lib/utils/react.js), [Svelte](https://ellx.io/ellx-hub/lib/utils/svelte.js), and Vue (*coming soon*) components, using the component API, e.g.
+
+```js
+// index.js
+// Tiny wrapper over svelte-json-tree
+export { default as pretty } from "~ellx-hub/lib/components/Pretty";
+
+// index.md
+{ pretty(m1) }
+```
+{ pretty(m1) }
 
 ## Ellx CLI
+You can use Ellx to work on your local files directly. This is precisely how you would reap all the benefits of source control and [Github integration](#sync-with-github).
 
-At the moment Ellx CLI comes with only one but very big feature, that is local development.
-
-First you need to install `ellx` package globally:
+First, you need to install the [Ellx CLI](https://github.com/ellxoft/ellx-cli) package globally:
 ```html
 $ npm i -g @ellx/cli
 or
 $ yarn global add @ellx/cli
 ```
 
-Then navigate to the directory you'd like to access in ellx and run
+Navigate to the directory you'd like to access in Ellx and run
 
 ```html
 $ ellx -u your-username
 ```
 
-This will run local file server on port 3002 by default.
+This will run the local file server on port 3002 by default.
 
-After that you can navigate to your local project via user menu on the top left of any page ("Ellx CLI connect") or by navigating straight to [https://ellx.io/external/localhost~3002](https://ellx.io/external/localhost~3002).
+After that, you can navigate to your local project via the user menu on the top left of any page ("Ellx CLI connect") or by navigating straight to [https://ellx.io/external/localhost~3002](https://ellx.io/external/localhost~3002).
 
 ## Publishing
 
-Ellx allow to export `index.md` namespace as a static page either as a direct HTML file download or publishing project to `{username}-{project}.ellx.app`. It normally takes about 2~3 minutes for the page to become available.
+A project can be published as a stand-alone independent website: perfect for documentation, finished interactive reports and dashboards, or generative art installations.
 
-This document itself was generated with Ellx, you can fork and play with it [here](https://ellx.io/matyunya/docs).
+The `index.md` file at the project's root is the default entry point for a published project. You can check how it is going to look like at the project preview page `https://ellx.io/{username}/{project}`.
+
+You can either export and download it as an HTML file, or publish it at `https://{username}-{project}.ellx.app` from the project's context menu.
+
+It normally takes about 2~3 minutes for the page to become available.
+
+This document itself was generated with Ellx, you can fork and play with it [here](https://ellx.io/ellx-hub/docs/index.md).
 
 ## Sync with Github
 
-In order to get the most out of Ellx we provide integration with Github as a Pro tier feature. It enables syncing public or private Github repositories with Ellx projects using Github actions.
+Ellx provides integration with Github as a Pro tier feature. It enables syncing public or private Github repositories with Ellx projects using Github actions.
 
 All you have to do is create a workflow file at `.github/workflows/my-action.yml`
 
@@ -499,8 +551,12 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-Note that this action will trigger sync whenever there's a new commit to `master` or `release/**` branches. Refer to [official documentation](https://docs.github.com/en/actions) to learn about other kinds of triggers and other options.
+Note that this action will trigger sync whenever there's a new commit to `master` or `release/**` branches. Refer to [Github documentation](https://docs.github.com/en/actions) to learn about other kinds of triggers and other options.
 
-## Deploy sheet
+Ellx uses the repo's `GITHUB_TOKEN` to set the `ellx-sync/{branch}` tag, thus authenticating the repo owner.
 
-...coming soon
+The contents of the corresponding branch are then uploaded to Ellx cloud as `https://ellx.io/{github-username)/{repo-name}@{version}`.
+
+`@{version}` is only added for `release/{version}` branches.
+
+If the repository is private on Github, the corresponding Ellx project will be made private as well. Idem for public repositories.
