@@ -551,4 +551,12 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-Note that this action will trigger sync whenever there's a new commit to `master` or `release/**` branches. Refer to [official documentation](https://docs.github.com/en/actions) to learn about other kinds of triggers and other options.
+Note that this action will trigger sync whenever there's a new commit to `master` or `release/**` branches. Refer to [Github documentation](https://docs.github.com/en/actions) to learn about other kinds of triggers and other options.
+
+Ellx uses the repo's `GITHUB_TOKEN` to set the `ellx-sync/{branch}` tag, thus authenticating the repo owner.
+
+The contents of the corresponding branch are then uploaded to Ellx cloud as `https://ellx.io/{github-username)/{repo-name}@{version}`.
+
+`@{version}` is only added for `release/{version}` branches.
+
+If the repository is private on Github, the corresponding Ellx project will be made private as well. Idem for public repositories.
