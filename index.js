@@ -6,16 +6,13 @@ export const test = 42;
 export const test2 = 43;
 
 class Hello {
-  constructor(props) {
+  constructor(props, { output }) {
+    this.output = output;
     this.count = 0;
     this.update(props);
   }
   update(props) {
-    this.count++;
-    this.name = props.name;
-  }
-  output() {
-    return `Hello ${this.name}! (updated ${this.count} times)`;
+    this.output(`Hello ${props.name}! (updated ${this.count++} times)`);
   }
 }
 
