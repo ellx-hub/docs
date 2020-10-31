@@ -399,7 +399,7 @@ However, in complex open systems, the inputs may come from outside, e.g. user in
 
 This is where components come into play. A component is simply defined by its *props* and its constructor. If a formula returns an object with `__EllxMeta__: { component: [Function] }` property, then it is an Ellx component, and the following logic is applied:
 
-- If the node does **not** already hold a component, a new component is created as `new component(props)`, where `props` is the result of the formula itself.
+- If the node does **not** already hold a component, a new component is created as `new component(props, options)`, where `props` is the result of the formula itself, and `options` are explained below.
 - If the node already holds a component that has been previously created by the **same** constructor `component`, then its `update(props)` method is called.
 - If the node already holds a component that has been previously created by a different constructor (in a strict `===` sense), then the previous component is destroyed and a new one is created as in the first case.
 
@@ -407,16 +407,13 @@ For example,
 ```js
 // index.js
 class Hello {
-  constructor(props) {
+  constructor(props, { output }) {
+    this.output = output;
     this.count = 0;
     this.update(props);
   }
   update(props) {
-    this.count++;
-    this.name = props.name;
-  }
-  output() {
-    return `Hello ${this.name}! (updated ${this.count} times)`;
+    this.output(`Hello ${props.name}! (updated ${this.count++} times)`);
   }
 }
 
@@ -436,45 +433,46 @@ export { default as input } from "~ellx-hub/lib/components/Input";
 
 >{ hello(name) }
 
-Ellx component API consists of only 5 lifecycle hooks that a component may implement, and all of them are optional!
+Ellx component API consists of only 5 lifecycle hooks that a component may implement, and all of them are optional except the constructor.
 
-##### update(props)
+```
+constructor(props, { output })
+```
+Ellx calls the component's constructor (`__EllxMeta__.component`) with 2 parameters: the result of the formula, representing the component's `props`, and an `options` object which at the moment contains only one useful field: the `output(value)` callback.
+
+The component can call `output(value)` to push any `value` back into the Ellx reactive graph any time during its lifetime. The `value` will replace the calculated `props` in the graph, and will propagate to the node's dependents.
+
+This is very useful for implementing components collecting user input, such as most of the UI components in [Ellx standard library](https://ellx.io/ellx-hub/lib).
+The `Hello` component example above does precisely this on each props `update`.
+
+Note that if your component wishes to use this mechanism, it is imperative to call `output(value)` from within the `constructor` at least for the first time. If the first value is not yet ready you should output a `Promise` or an iterator.
+
+If the `constructor` does not call `output(value)` synchronously, the node would keep the calculated `props` as its value.
+```
+update(props)
+```
 
 While the constructor is called only when the component is first created, its `update` method is called every time the node is recalculated to produce the new `props`, and its result is passed to `update` as its only argument.
 
 This is precisely what allows components to maintain an internal state through node recalculations.
 
-##### output()
-
-The calculation node adopts the result of the `output()` hook (when it's implemented) as its new value (instead of the `props` themselves), and propagates it to the node's dependents.
-
-Note, that `output()` may return a Promise or an iterator like any other Ellx node. What is special to components though is the case when `output()` returns an async iterator, e.g.
-```js
-async *output() {
-  while (true) {
-    yield await this.produceNextValuePromise();
-  }
-}
 ```
-In such a situation the calculation node will adopt the values yielded by the iterator one by one:
-```js
-for await (let value of output()) adopt(value);
+stale()
 ```
-thus effectively implementing an *observable* paradigm, akin to MobX or RxJs observables.
-
-This is very useful for implementing components collecting user input, such as most of the UI components in [Ellx standard library](https://ellx.io/ellx-hub/lib).
-
-##### stale()
 If a component does not implement the `stale` hook, it will be destroyed if its props become *stale*, e.g. as a result of an async calculation which has not yet resolved, and re-created again when resolved props become available.
 
 Implementing the `stale` hook allows the component to treat these situations gracefully, for instance, by rendering a *spinner* and/or choosing to output a previously calculated value to node dependents.
 
-##### render(target)
+```
+render(target)
+```
 This argument to the `render` hook is the DOM node, where the component is supposed to render itself in the context of a spreadsheet or a layout.
 
 However, components have full access to the DOM of the project's sandboxed iframe and may append themselves directly to the `document` or `head` if they choose so, without even necessarily implementing the `render` hook.
 
-##### dispose()
+```
+dispose()
+```
 `dispose` is called before the component is destroyed:
 - when the node is removed
 - when an error is thrown upstream
