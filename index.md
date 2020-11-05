@@ -113,7 +113,7 @@ import { plot } from '~ellx-hub/plot';
 ```
 Note that, like in NodeJS, Ellx tries to automatically append `.js` and `/index.js` to resolve imports without extensions.
 
-Out of the box you can also import `.svelte` (Svelte components), `.jsx` (React components), `.vue` (Vue components: *coming soon*), `.css`, `.json`, and `.glsl` (WebGL shaders) files, like with most modern web bundlers.
+Out of the box you can also import `.svelte` (Svelte components), `.jsx` (React components), `.vue` (Vue components), `.css`, `.json`, and `.glsl` (WebGL shaders) files, like with most modern web bundlers.
 
 Keep an eye on [~ellx-hub](https://ellx.io/ellx-hub) user: it is Ellx official open-source collection of components and utilities.
 
